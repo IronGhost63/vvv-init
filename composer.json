@@ -1,0 +1,21 @@
+{
+    "name": "wp63/vvv-init",
+    "description": "VVV Project initiator tool",
+    "type": "project",
+    "license": "GPLv3",
+    "authors": [
+        {
+            "name": "Jirayu Yingthawornsuk",
+            "email": "me@jirayu.in.th"
+        }
+    ],
+    "require": {
+        "league/climate": "^3.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "WP63\\Tools\\Commands\\": "src/commands"
+        }
+    },
+    "bin": ["src/index.php"]
+}
