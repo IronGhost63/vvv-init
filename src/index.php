@@ -9,6 +9,7 @@ class VVVTools {
   protected $config_path;
   protected $argv;
   protected $site_name;
+  protected $verbose = false;
 
   public function __construct( $argv ) {
     $this->argv = $argv;
@@ -64,7 +65,9 @@ class VVVTools {
     $dn = array(
       "countryName" => "TH",
       "stateOrProvinceName" => "Bangkok",
+      "localityName" => "Lat Krabang",
       "organizationName" => "WP63",
+      "organizationalUnitName" => "WP63 Development Team",
       "commonName" => sprintf( '%s.test', $this->site_name ),
       "emailAddress" => sprintf( 'dev@%s.test', $this->site_name )
     );
@@ -83,14 +86,24 @@ class VVVTools {
     // Now you will want to preserve your private key, CSR and self-signed
     // cert so that they can be installed into your web server.
 
-    openssl_csr_export($csr, $csrout) and var_dump($csrout);
-    openssl_x509_export($sscert, $certout) and var_dump($certout);
-    openssl_pkey_export($privkey, $pkeyout) and var_dump($pkeyout);
+    openssl_csr_export($csr, $csrout);
 
-    // Show any errors that occurred here
-    while (($e = openssl_error_string()) !== false) {
+    $padding = $this->terminal->padding(40);
+
+    openssl_x509_export($sscert, $certout);
+    //$this->terminal->out( $certout );
+    $padding->label('- SSL Certification')->result('done');
+    openssl_pkey_export($privkey, $pkeyout);
+    $padding->label('- SSL Private Key')->result('done');
+    //$this->terminal->out( $pkeyout );
+
+    if( $this->verbose ) {
+      // Show any errors that occurred here
+      while (($e = openssl_error_string()) !== false) {
         $this->terminal->to('error')->yellow('OpenSSL: ' . $e );
+      }
     }
+
     //save certificate and privatekey to file
     file_put_contents( $path . '/' . $this->site_name . '.test.cert', $certout );
     file_put_contents( $path . '/' . $this->site_name . '.test.key', $pkeyout );
@@ -122,8 +135,8 @@ class VVVTools {
     echo PHP_EOL;
 
     // Create neccessary directories
-    $this->terminal->out(':: Creating directory');
-    $padding = $this->terminal->padding(12);
+    $this->terminal->green( '> Creating directory' );
+    $padding = $this->terminal->padding(40);
 
     mkdir( './public_html', 0755 );
     $padding->label('- ./public_html')->result('done');
@@ -133,7 +146,7 @@ class VVVTools {
 
     echo PHP_EOL;
 
-    $this->terminal->out(':: Creating neccesary files');
+    $this->terminal->green( '> Creating neccesary files' );
     $this->generateCertificate();
   }
 }
