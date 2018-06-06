@@ -12,5 +12,5 @@
     "require": {
         "league/climate": "^3.4"
     },
-    "bin": ["src/index.php"]
+    "bin": ["src/vvv-tool.php"]
 }
