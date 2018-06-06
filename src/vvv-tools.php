@@ -148,6 +148,26 @@ class VVVTools {
 
     $this->terminal->green( '> Creating neccesary files' );
     $this->generateCertificate();
+    $padding->label('- vvv-hosts')->result('done');
+    $padding->label('- vvv-init.sh')->result('done');
+    $padding->label('- vvv-nginx.conf')->result('done');
+
+    echo PHP_EOL;
+
+    $this->terminal->green( '> Updating VVV configuration' );
+    $padding->label('- vvv-custom.yml')->result('TBD');
+
+    echo PHP_EOL;
+
+    $this->terminal->border();
+
+    echo PHP_EOL;
+
+    $this->terminal->green( 'Your VVV project is <background_green><white>ready</white></background_green>!' );
+    $this->terminal->out( 'Run `vagrant reload --provision` from VVV directory to take effect' );
+    $this->terminal->out( sprintf( 'To access your website, put your web files in `public_html` directory. And goto https://%s.test', $this->site_name ) );
+
+    echo PHP_EOL;
   }
 }
 
