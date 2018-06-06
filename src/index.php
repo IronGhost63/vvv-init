@@ -60,6 +60,8 @@ class VVVTools {
   }
 
   public function init() {
+    echo PHP_EOL;
+
     if( !is_writable('.') ) {
       $this->terminal->backgroundRed('                               ');
       $this->terminal->backgroundRed('        VVV Tools error        ');

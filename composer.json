@@ -1,5 +1,5 @@
 {
-    "name": "wp63/vvv-init",
+    "name": "wp63/vvv-tool",
     "description": "VVV Project initiator tool",
     "type": "project",
     "license": "GPLv3",
@@ -11,11 +11,6 @@
     ],
     "require": {
         "league/climate": "^3.4"
-    },
-    "autoload": {
-        "psr-4": {
-            "WP63\\Tools\\Commands\\": "src/commands"
-        }
     },
     "bin": ["src/index.php"]
 }
