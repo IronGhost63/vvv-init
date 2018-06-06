@@ -8,8 +8,9 @@ class VVVTools {
   protected $config;
   protected $config_path;
   protected $argv;
+  protected $site_name;
 
-  function __construct( $argv ) {
+  public function __construct( $argv ) {
     $this->argv = $argv;
     $this->config_path = $_SERVER['HOME'] . "/.vvv-init.json";
     $this->terminal = new \League\CLImate\CLImate;
@@ -59,6 +60,42 @@ class VVVTools {
 
   }
 
+  protected function generateCertificate( $path = './provision/ssl' ) {
+    $dn = array(
+      "countryName" => "TH",
+      "stateOrProvinceName" => "Bangkok",
+      "organizationName" => "WP63",
+      "commonName" => sprintf( '%s.test', $this->site_name ),
+      "emailAddress" => sprintf( 'dev@%s.test', $this->site_name )
+    );
+
+    // Generate a new private (and public) key pair
+    $privkey = openssl_pkey_new();
+
+    // Generate a certificate signing request
+    $csr = openssl_csr_new($dn, $privkey);
+
+    // You will usually want to create a self-signed certificate at this
+    // point until your CA fulfills your request.
+    // This creates a self-signed cert that is valid for 365 days
+    $sscert = openssl_csr_sign($csr, null, $privkey, 365);
+
+    // Now you will want to preserve your private key, CSR and self-signed
+    // cert so that they can be installed into your web server.
+
+    openssl_csr_export($csr, $csrout) and var_dump($csrout);
+    openssl_x509_export($sscert, $certout) and var_dump($certout);
+    openssl_pkey_export($privkey, $pkeyout) and var_dump($pkeyout);
+
+    // Show any errors that occurred here
+    while (($e = openssl_error_string()) !== false) {
+        $this->terminal->to('error')->yellow('OpenSSL: ' . $e );
+    }
+    //save certificate and privatekey to file
+    file_put_contents( $path . '/' . $this->site_name . '.test.cert', $certout );
+    file_put_contents( $path . '/' . $this->site_name . '.test.key', $pkeyout );
+  }
+
   public function init() {
     echo PHP_EOL;
 
@@ -81,6 +118,7 @@ class VVVTools {
     $response = $input->prompt();
     $this->terminal->green( sprintf( 'Your site name is: %s', $response ) );
     $this->terminal->green( sprintf( 'Website url will be: https://%s.test', $response ) );
+    $this->site_name = $response;
     echo PHP_EOL;
 
     // Create neccessary directories
@@ -96,6 +134,7 @@ class VVVTools {
     echo PHP_EOL;
 
     $this->terminal->out(':: Creating neccesary files');
+    $this->generateCertificate();
   }
 }
 
