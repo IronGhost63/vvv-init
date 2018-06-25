@@ -18,3 +18,6 @@ challengePassword_max		= 20
 basicConstraints = CA:FALSE
 keyUsage = nonRepudiation, digitalSignature, keyEncipherment
 subjectAltName = ${ENV::VVV_SSL_SAN}
+
+[ SAN ]
+subjectAltName = ${ENV::VVV_SSL_SAN}

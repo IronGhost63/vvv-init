@@ -5,6 +5,8 @@ require_once '../vendor/autoload.php';
 
 use Cocur\Slugify\Slugify;
 
+//\Phar::interceptFileFuncs();
+
 error_reporting(E_ALL);
 
 class VVVTools {
@@ -67,6 +69,19 @@ class VVVTools {
 
   protected function generateCertificate( $path = './provision/ssl' ) {
     $padding = $this->terminal->padding(40);
+
+    // $opensslCnf = tmpfile();
+
+    // $content = fwrite( $opensslCnf,
+    //   "[ req ]" . PHP_EOL .
+    //   "distinguished_name	= req_distinguished_name" . PHP_EOL .
+    //   "attributes		= req_attributes" . PHP_EOL . PHP_EOL .
+    //   "[ req_distinguished_name ]" . PHP_EOL . PHP_EOL .
+    //   "[ req_attributes ]" . PHP_EOL . PHP_EOL .
+    //   "[SAN]" . PHP_EOL . PHP_EOL .
+    //   "subjectAltName=DNS:" . $this->site_name . ".test"
+    // );
+
     // src: https://gist.github.com/dol/e0b7f084e2e7158efc87
 
     $keyConfig = [
@@ -84,9 +99,11 @@ class VVVTools {
 
     $csrConfig = [
       'config' => __DIR__ . '/openssl.cnf',
-      'req_extensions' => 'v3_req',
-      'digest_alg' => 'sha256',
+      'req_extensions' => 'SAN',
+      'digest_alg' => 'SHA256',
     ];
+
+    echo __DIR__;
 
     $addPrefix = function ($value) {
       // Important: Sanatize domain value and check if a valid domain
@@ -120,6 +137,14 @@ class VVVTools {
       file_put_contents( $path . '/' . $this->site_name . '.test.key', $pkeyout );
       $padding->label('- SSL Private Key')->result('done');
     }
+  }
+
+  protected function generateHosts( $path = './provision' ) {
+    file_put_contents( $path . '/vvv-hosts', $this->site_name . ".test");
+  }
+
+  protected function generateInitsh( $path = './provision' ) {
+    $initsh = file_get_contents('');
   }
 
   public function init() {
