@@ -1,6 +1,6 @@
 [ req ]
-distinguished_name = req_distinguished_name
-req_extensions = v3_req
+distinguished_name	= req_distinguished_name
+attributes		= req_attributes
 
 [ req_distinguished_name ]
 countryName = TH
@@ -8,6 +8,11 @@ stateOrProvinceName = Bangkok
 localityName = Lat Krabang
 organizationName = WP63
 organizationalUnitName = WP63 Development Team
+
+[ req_attributes ]
+challengePassword		= A challenge password
+challengePassword_min		= 4
+challengePassword_max		= 20
 
 [ v3_req ]
 basicConstraints = CA:FALSE
