@@ -3,6 +3,10 @@ namespace WP63\Tools;
 
 require_once '../vendor/autoload.php';
 
+use Cocur\Slugify\Slugify;
+
+error_reporting(E_ALL);
+
 class VVVTools {
   protected $terminal;
   protected $config;
@@ -62,54 +66,64 @@ class VVVTools {
   }
 
   protected function generateCertificate( $path = './provision/ssl' ) {
-    $dn = array(
-      "countryName" => "TH",
-      "stateOrProvinceName" => "Bangkok",
-      "localityName" => "Lat Krabang",
-      "organizationName" => "WP63",
-      "organizationalUnitName" => "WP63 Development Team",
-      "commonName" => sprintf( '%s.test', $this->site_name ),
-      "emailAddress" => sprintf( 'dev@%s.test', $this->site_name )
-    );
-
-    // Generate a new private (and public) key pair
-    $privkey = openssl_pkey_new();
-
-    // Generate a certificate signing request
-    $csr = openssl_csr_new($dn, $privkey);
-
-    // You will usually want to create a self-signed certificate at this
-    // point until your CA fulfills your request.
-    // This creates a self-signed cert that is valid for 365 days
-    $sscert = openssl_csr_sign($csr, null, $privkey, 365);
-
-    // Now you will want to preserve your private key, CSR and self-signed
-    // cert so that they can be installed into your web server.
-
-    openssl_csr_export($csr, $csrout);
-
     $padding = $this->terminal->padding(40);
+    // src: https://gist.github.com/dol/e0b7f084e2e7158efc87
 
-    openssl_x509_export($sscert, $certout);
-    //$this->terminal->out( $certout );
-    $padding->label('- SSL Certification')->result('done');
-    openssl_pkey_export($privkey, $pkeyout);
-    $padding->label('- SSL Private Key')->result('done');
-    //$this->terminal->out( $pkeyout );
+    $keyConfig = [
+      'private_key_type' => OPENSSL_KEYTYPE_RSA,
+      'private_key_bits' => 2048,
+    ];
 
-    if( $this->verbose ) {
-      // Show any errors that occurred here
+    $sanDomains = [
+      $this->site_name . '.test',
+    ];
+
+    $dn = [
+      'commonName' => reset($sanDomains)
+    ];
+
+    $csrConfig = [
+      'config' => __DIR__ . '/openssl.cnf',
+      'req_extensions' => 'v3_req',
+      'digest_alg' => 'sha256',
+    ];
+
+    $addPrefix = function ($value) {
+      // Important: Sanatize domain value and check if a valid domain
+      return 'DNS:' . $value;
+    };
+
+    $sanDomainPrefixed = array_map($addPrefix, $sanDomains);
+
+    putenv('VVV_SSL_SAN=' . implode(',', $sanDomainPrefixed));
+
+    $key = openssl_pkey_new($keyConfig);
+    $csr = openssl_csr_new($dn, $key, $csrConfig);
+    $sscert = openssl_csr_sign($csr, null, $key, 365);
+
+    if (false === $csr) {
+      $this->terminal->backgroundRed(' Errors occur while generating certification ');
+
       while (($e = openssl_error_string()) !== false) {
-        $this->terminal->to('error')->yellow('OpenSSL: ' . $e );
+        $this->terminal->red( $e );
       }
-    }
 
-    //save certificate and privatekey to file
-    file_put_contents( $path . '/' . $this->site_name . '.test.cert', $certout );
-    file_put_contents( $path . '/' . $this->site_name . '.test.key', $pkeyout );
+      return false;
+    } else {
+      openssl_csr_export($csr, $csrout);
+      openssl_x509_export($sscert, $csrout);
+      openssl_pkey_export($key, $pkeyout);
+
+      //save certificate and privatekey to file
+      file_put_contents( $path . '/' . $this->site_name . '.test.cert', $csrout );
+      $padding->label('- SSL Certification')->result('done');
+      file_put_contents( $path . '/' . $this->site_name . '.test.key', $pkeyout );
+      $padding->label('- SSL Private Key')->result('done');
+    }
   }
 
   public function init() {
+    $slugify = new Slugify();
     echo PHP_EOL;
 
     if( !is_writable('.') ) {
@@ -128,7 +142,7 @@ class VVVTools {
     echo PHP_EOL;
 
     $input = $this->terminal->input('Please enter your site name:');
-    $response = $input->prompt();
+    $response = $slugify->slugify($input->prompt());
     $this->terminal->green( sprintf( 'Your site name is: %s', $response ) );
     $this->terminal->green( sprintf( 'Website url will be: https://%s.test', $response ) );
     $this->site_name = $response;
@@ -163,7 +177,7 @@ class VVVTools {
 
     echo PHP_EOL;
 
-    $this->terminal->green( 'Your VVV project is <background_green><white>ready</white></background_green>!' );
+    $this->terminal->green( 'Your VVV project is <background_green><white> ready </white></background_green>!' );
     $this->terminal->out( 'Run `vagrant reload --provision` from VVV directory to take effect' );
     $this->terminal->out( sprintf( 'To access your website, put your web files in `public_html` directory. And goto https://%s.test', $this->site_name ) );
 

@@ -1,0 +1,15 @@
+[ req ]
+distinguished_name = req_distinguished_name
+req_extensions = v3_req
+
+[ req_distinguished_name ]
+countryName = TH
+stateOrProvinceName = Bangkok
+localityName = Lat Krabang
+organizationName = WP63
+organizationalUnitName = WP63 Development Team
+
+[ v3_req ]
+basicConstraints = CA:FALSE
+keyUsage = nonRepudiation, digitalSignature, keyEncipherment
+subjectAltName = ${ENV::VVV_SSL_SAN}
